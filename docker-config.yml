@@ -1,0 +1,4 @@
+# docker-config.yml
+image:
+  name: mukulmj/custom-ubuntu-nodejs-npm
+  tag: 0.0.1-alpha
