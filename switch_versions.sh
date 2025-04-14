@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 # Function to display usage instructions
 display_usage() {
