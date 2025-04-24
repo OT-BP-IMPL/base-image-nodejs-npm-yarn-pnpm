@@ -1,4 +1,4 @@
 # docker-config.yml
 image:
   name: mukulmj/custom-ubuntu-nodejs-npm
-  tag: 0.0.2-alpha
+  tag: 0.0.3-offline
