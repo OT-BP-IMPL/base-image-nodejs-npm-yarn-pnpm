@@ -1,58 +1,62 @@
-# Release Notes for `custom-ubuntu-nodejs-npm` Docker Image
+# Release Notes for `mukumlmj/custom-ubuntu-nodejs-npm` Docker Image
 
-## Version: `0.0.1-alpha`
-### Release Date: April 14, 2025
+## Version: `0.0.2-alpha`
+### Release Date: April 24, 2025
 
 ---
 
 ### Overview
-This is the initial release of the `custom-ubuntu-nodejs-npm` Docker image. The image is based on Ubuntu 20.04 and provides a flexible environment for working with multiple versions of Node.js and npm. It includes a dynamic version-switching script to simplify development workflows.
+This release introduces enhanced functionality for managing multiple versions of `pnpm` and `yarn`, along with improved error handling and usability in the `switch_versions.sh` script. The image ensures all dependencies are pre-downloaded, making it suitable for offline environments.
 
 ---
 
 ### Features
-- **Node.js Support**:
-  - Pre-installed Node.js versions: `14.21.3`, `16.20.0`, `18.17.1`, and `20.5.0`.
-  - Bundled `npm` with each Node.js version.
+- **pnpm Support**:
+  - Pre-downloaded specific versions of `pnpm`:
+    - `pnpm-7.30.0`
+    - `pnpm-8.6.0`
+    - `pnpm-9.0.0`
+    - `pnpm-10.8.1`
+  - Dynamically switch between `pnpm` versions using the `PNPM_VERSION` environment variable.
 
-- **Dynamic Version Switching**:
-  - Use the `NODE_VERSION` environment variable to switch between Node.js versions dynamically.
-  - Supported versions: `14`, `16`, `18`, and `20`.
+- **yarn Support**:
+  - Pre-downloaded specific versions of `yarn`:
+    - `yarn-v1.22.19`
+    - `yarn-v1.22.22`
+  - Dynamically switch between `yarn` versions using the `YARN_VERSION` environment variable.
+  - Added error handling to warn users if an unsupported `YARN_VERSION` is specified.
 
-- **Python Virtual Environment**:
-  - Includes Python 3 with a pre-configured virtual environment.
-  - Installed the `cryptography` library for secure scripting needs.
+- **Improved `switch_versions.sh` Script**:
+  - Handles additional arguments passed to the container and executes them or defaults to starting a `bash` shell.
+  - Enhanced error handling for unsupported `NODE_VERSION`, `NPM_VERSION`, `PNPM_VERSION`, and `YARN_VERSION`.
+  - Logs the selected versions of Node.js, npm, pnpm, and yarn for better visibility.
 
-- **Essential Tools**:
-  - Installed tools and libraries: `curl`, `wget`, `git`, `jq`, `bash`, `make`, `gcc`, `libssl-dev`, and more.
-
-- **Timezone Configuration**:
-  - Default timezone set to `Asia/Kolkata`.
+- **Offline Compatibility**:
+  - All required versions of `pnpm` and `yarn` are pre-downloaded during the Docker build process, ensuring no runtime downloads are required.
 
 ---
 
 ### Fixes
-- Resolved potential issues with the `switch_versions.sh` script:
-  - Ensured the correct shebang (`#!/bin/bash`) is used.
-  - Verified executable permissions for the script.
+- Corrected URLs for downloading `yarn` tarballs to avoid `404` errors.
+- Resolved issues with `pnpm` installation by ensuring compatibility with the selected Node.js version.
+- Improved error handling in the `switch_versions.sh` script for unsupported versions.
 
 ---
 
 ### Known Issues
-- **Unsupported Node.js Versions**:
-  - If an unsupported `NODE_VERSION` is specified, the container will display an error and exit.
-  - Supported versions: `14`, `16`, `18`, and `20`.
-
-- **npm Version Customization**:
-  - Currently, the `npm` version is tied to the bundled version with Node.js. Custom npm versions can be installed manually inside the container.
+- **Unsupported Versions**:
+  - If an unsupported version of Node.js, npm, pnpm, or yarn is specified, the container will display an error and exit.
+  - Supported versions:
+    - `NODE_VERSION`: `14`, `16`, `18`, `20`
+    - `YARN_VERSION`: `1.22.19`, `1.22.22`
+    - `pnpm`: Pre-downloaded versions only.
 
 ---
 
 ### Planned Enhancements
-- Add support for additional Node.js versions as they are released.
-- Include optional support for custom npm versions via an `NPM_VERSION` environment variable.
-- Add automated tests for verifying Node.js and npm version switching.
-- Optimize the image size by removing unnecessary dependencies.
+- Add support for additional versions of `pnpm` and `yarn`.
+- Include automated tests for verifying `pnpm` and `yarn` version switching.
+- Optimize the image size by removing unnecessary files after installation.
 
 ---
 
@@ -60,3 +64,31 @@ This is the initial release of the `custom-ubuntu-nodejs-npm` Docker image. The 
 1. **Build the Image**:
    ```bash
    docker build -t custom-ubuntu-nodejs-npm .
+   ```
+
+2. **Run the Container**:
+   ```bash
+   docker run -it --rm \
+     -e NODE_VERSION=16 \
+     -e NPM_VERSION=8.19.2 \
+     -e PNPM_VERSION=8.6.0 \
+     -e YARN_VERSION=1.22.19 \
+     custom-ubuntu-nodejs-npm
+   ```
+
+3. **Default Behavior**:
+   - If no environment variables are specified, the container defaults to:
+     - `NODE_VERSION=14`
+     - `YARN_VERSION=1.22.19`
+
+---
+
+### Changelog
+- **Added**:
+  - Pre-downloaded specific versions of `pnpm` and `yarn`.
+  - Dynamic version switching for `pnpm` and `yarn`.
+  - Enhanced error handling in `switch_versions.sh`.
+- **Fixed**:
+  - Corrected `yarn` download URLs.
+  - Resolved compatibility issues with `pnpm` and Node.js versions.
+  

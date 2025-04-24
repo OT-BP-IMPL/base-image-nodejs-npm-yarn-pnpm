@@ -68,8 +68,8 @@ RUN mkdir -p /opt/pnpm && \
 # Pre-download specific yarn versions
 RUN mkdir -p /opt/yarn && \
     curl -fsSL https://github.com/yarnpkg/yarn/releases/download/v1.22.19/yarn-v1.22.19.tar.gz -o /opt/yarn/yarn-v1.22.19.tar.gz && \
-    curl -fsSL https://github.com/yarnpkg/berry/releases/download/@yarnpkg/cli/3.5.1/yarn-v3.5.1.tar.gz -o /opt/yarn/yarn-v3.5.1.tar.gz
-    
+    curl -fsSL https://github.com/yarnpkg/yarn/releases/download/v1.22.22/yarn-v1.22.22.tar.gz -o /opt/yarn/yarn-v1.22.22.tar.gz
+
 # Copy the script to switch versions
 COPY switch_versions.sh /usr/local/bin/switch_versions.sh
 RUN chmod +x /usr/local/bin/switch_versions.sh
