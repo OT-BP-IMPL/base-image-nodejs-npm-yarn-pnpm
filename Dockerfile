@@ -10,6 +10,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     apt-utils \
     curl \
+    ca-certificates \
+    xz-utils \
+    gnupg \
     wget \
     unzip \
     tar \
@@ -31,6 +34,9 @@ RUN apt-get update && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create directories for tools
+RUN mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /usr/local/bin /root/.nvm
 
 # Install multiple versions of Node.js
 RUN mkdir -p /opt/nodejs && \
@@ -57,6 +63,13 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | b
     nvm install 18.17.1 && \
     nvm install 20.5.0 && \
     nvm alias default 14.21.3
+
+# Pre-download specific npm versions
+RUN mkdir -p /opt/npm && \
+    curl -fsSL https://registry.npmjs.org/npm/-/npm-6.14.17.tgz -o /opt/npm/npm-6.14.17.tgz && \
+    curl -fsSL https://registry.npmjs.org/npm/-/npm-8.19.2.tgz -o /opt/npm/npm-8.19.2.tgz && \
+    curl -fsSL https://registry.npmjs.org/npm/-/npm-9.8.1.tgz -o /opt/npm/npm-9.8.1.tgz && \
+    curl -fsSL https://registry.npmjs.org/npm/-/npm-10.9.2.tgz -o /opt/npm/npm-10.9.2.tgz
 
 # Pre-download specific pnpm versions
 RUN mkdir -p /opt/pnpm && \

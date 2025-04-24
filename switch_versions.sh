@@ -1,85 +1,66 @@
 #!/bin/bash
 
-# Function to display usage instructions
 display_usage() {
   echo "##############################################"
-  echo "# Welcome to the Node.js, npm, pnpm, and yarn Switcher #"
+  echo "# Offline Node.js, npm, pnpm, and yarn Switcher #"
   echo "##############################################"
-  echo "# Usage:"
-  echo "# Set the following environment variables to control the versions:"
-  echo "#"
-  echo "# - NODE_VERSION: Choose from 14, 16, 18, or 20 (default: 14)"
-  echo "# - NPM_VERSION: Specify the npm version (default: version for the selected Node.js)"
-  echo "# - PNPM_VERSION: Specify the pnpm version (default: version for the selected Node.js)"
-  echo "# - YARN_VERSION: Specify the yarn version (default: 1.22.19)"
-  echo "#"
-  echo "# Example:"
-  echo "# docker run -it --rm -e NODE_VERSION=16 -e NPM_VERSION=8.19.2 -e PNPM_VERSION=8.6.0 -e YARN_VERSION=3.5.1 custom-ubuntu-nodejs-npm"
+  echo "# Set environment variables:"
+  echo "# NODE_VERSION: 14 | 16 | 18 | 20 (default: 14)"
+  echo "# NPM_VERSION: Use offline .tgz only (see /opt/npm)"
+  echo "# PNPM_VERSION: Uses offline .tgz (pre-mapped)"
+  echo "# YARN_VERSION: 1.22.19 | 1.22.22 only (offline)"
   echo "##############################################"
   echo ""
 }
 
-# Default versions
+# Defaults
 NODE_VERSION=${NODE_VERSION:-14}
 NPM_VERSION=${NPM_VERSION:-""}
 PNPM_VERSION=${PNPM_VERSION:-""}
 YARN_VERSION=${YARN_VERSION:-"1.22.19"}
 
-# Check for unsupported NODE_VERSION
-if [ "$NODE_VERSION" != "14" ] && [ "$NODE_VERSION" != "16" ] && [ "$NODE_VERSION" != "18" ] && [ "$NODE_VERSION" != "20" ]; then
-  echo "Error: Unsupported NODE_VERSION: $NODE_VERSION"
-  display_usage
-  exit 1
-fi
+# Set node paths
+case $NODE_VERSION in
+  14) NODE_HOME=$NODE_HOME_14; PNPM_TARBALL="/opt/pnpm/pnpm-7.30.0.tgz";;
+  16) NODE_HOME=$NODE_HOME_16; PNPM_TARBALL="/opt/pnpm/pnpm-8.6.0.tgz";;
+  18) NODE_HOME=$NODE_HOME_18; PNPM_TARBALL="/opt/pnpm/pnpm-9.0.0.tgz";;
+  20) NODE_HOME=$NODE_HOME_20; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
+  *) echo "Unsupported NODE_VERSION: $NODE_VERSION"; display_usage; exit 1;;
+esac
 
-# Switch Node.js version
-if [ "$NODE_VERSION" == "14" ]; then
-  export NODE_HOME=$NODE_HOME_14
-  export PNPM_TARBALL="/opt/pnpm/pnpm-7.30.0.tgz"
-elif [ "$NODE_VERSION" == "16" ]; then
-  export NODE_HOME=$NODE_HOME_16
-  export PNPM_TARBALL="/opt/pnpm/pnpm-8.6.0.tgz"
-elif [ "$NODE_VERSION" == "18" ]; then
-  export NODE_HOME=$NODE_HOME_18
-  export PNPM_TARBALL="/opt/pnpm/pnpm-9.0.0.tgz"
-elif [ "$NODE_VERSION" == "20" ]; then
-  export NODE_HOME=$NODE_HOME_20
-  export PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz"
-fi
-
-# Update PATH
 export PATH=$NODE_HOME/bin:$PATH
 
-# Ensure nvm is loaded
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-
-# Use the correct Node.js version
-nvm use $NODE_VERSION
-
-# Use the correct npm version
+# Offline npm install
 if [ -n "$NPM_VERSION" ]; then
-  npm install -g npm@$NPM_VERSION
+  NPM_TARBALL="/opt/npm/npm-${NPM_VERSION}.tgz"
+  if [ -f "$NPM_TARBALL" ]; then
+    npm install -g "$NPM_TARBALL"
+  else
+    echo "Error: NPM version tarball not found at $NPM_TARBALL"
+    exit 1
+  fi
 fi
 
-# Install pnpm from the pre-downloaded tarball
-npm install -g $PNPM_TARBALL
+# Offline pnpm install
+npm install -g "$PNPM_TARBALL"
 
-# Install yarn from the pre-downloaded tarball
+# Offline yarn install
+YARN_DIR=""
 if [ "$YARN_VERSION" == "1.22.19" ]; then
-  tar -xzf /opt/yarn/yarn-v1.22.19.tar.gz -C /usr/local && ln -sf /usr/local/yarn-v1.22.19/bin/yarn /usr/local/bin/yarn
+  YARN_DIR="yarn-v1.22.19"
 elif [ "$YARN_VERSION" == "1.22.22" ]; then
-  tar -xzf /opt/yarn/yarn-v1.22.22.tar.gz -C /usr/local && ln -sf /usr/local/yarn-v1.22.22/bin/yarn /usr/local/bin/yarn
+  YARN_DIR="yarn-v1.22.22"
 else
-  echo "Error: Specified YARN_VERSION ($YARN_VERSION) is not available. Pre-downloaded versions are: 1.22.19, 1.22.22."
-  exit 1
+  echo "Unsupported YARN_VERSION: $YARN_VERSION"; exit 1
 fi
 
-# Log the selected versions
-echo "Using Node.js version: $NODE_VERSION ($NODE_HOME)"
-echo "Using npm version: $(npm --version)"
-echo "Using pnpm version: $(pnpm --version)"
-echo "Using yarn version: $(yarn --version)"
+tar -xzf "/opt/yarn/${YARN_DIR}.tar.gz" -C /usr/local
+ln -sf "/usr/local/${YARN_DIR}/bin/yarn" /usr/local/bin/yarn
 
-# Execute the passed command
+# Log versions
+echo "Node.js: $(node -v)"
+echo "npm: $(npm -v)"
+echo "pnpm: $(pnpm -v)"
+echo "yarn: $(yarn -v)"
+
 exec "$@"
