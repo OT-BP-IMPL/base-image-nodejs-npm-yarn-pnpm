@@ -47,6 +47,51 @@
 
 ---
 
+## [0.0.3-offline] - 2025-04-25
+
+### Added
+- **Offline Compatibility**:
+  - Ensured the container can run completely offline by pre-downloading all required dependencies during the build process.
+  - Pre-downloaded specific versions of `npm`:
+    - `npm-6.14.17`
+    - `npm-8.19.2`
+    - `npm-9.8.1`
+    - `npm-10.9.2`
+  - Pre-downloaded specific versions of `pnpm`:
+    - `pnpm-7.30.0`
+    - `pnpm-8.6.0`
+    - `pnpm-9.0.0`
+    - `pnpm-10.8.1`
+  - Pre-downloaded specific versions of `yarn`:
+    - `yarn-v1.22.19`
+    - `yarn-v1.22.22`
+
+- **Dynamic Version Switching**:
+  - Enhanced the `switch_versions.sh` script to dynamically switch between pre-downloaded versions of `npm`, `pnpm`, and `yarn` based on environment variables.
+
+### Fixed
+- **Error Handling**:
+  - Improved error messages in `switch_versions.sh` to notify users if a specified version of `npm`, `pnpm`, or `yarn` is not available.
+  - Ensured the script exits gracefully if unsupported versions are specified.
+
+### Changed
+- **Dockerfile Enhancements**:
+  - Added pre-downloading of all required dependencies (`npm`, `pnpm`, `yarn`) during the build process to avoid runtime downloads.
+  - Updated the `ENTRYPOINT` to use the `switch_versions.sh` script for dynamic version switching.
+
+### Known Issues
+- Only pre-downloaded versions of `npm`, `pnpm`, and `yarn` are supported. If a user specifies a version that is not pre-downloaded, the container will display an error and exit.
+
+---
+
+### How to Use
+1. **Build the Image**:
+   ```bash
+   docker build -t custom-ubuntu-nodejs-npm:0.0.3-offline .
+   ```
+
+---
+
 ## [Unreleased]
 
 ### Planned
