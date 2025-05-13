@@ -5,7 +5,7 @@ display_usage() {
   echo "# Offline Node.js, npm, pnpm, and yarn Switcher #"
   echo "##############################################"
   echo "# Set environment variables:"
-  echo "# NODE_VERSION: 14 | 16 | 18 | 20 (default: 14)"
+  echo "# NODE_VERSION: 14 | 16 | 18 | 20 | 21 (default: 14)"
   echo "# NPM_VERSION: Use offline .tgz only (see /opt/npm)"
   echo "# PNPM_VERSION: Uses offline .tgz (pre-mapped)"
   echo "# YARN_VERSION: 1.22.19 | 1.22.22 only (offline)"
@@ -25,6 +25,7 @@ case $NODE_VERSION in
   16) NODE_HOME=$NODE_HOME_16; PNPM_TARBALL="/opt/pnpm/pnpm-8.6.0.tgz";;
   18) NODE_HOME=$NODE_HOME_18; PNPM_TARBALL="/opt/pnpm/pnpm-9.0.0.tgz";;
   20) NODE_HOME=$NODE_HOME_20; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
+  21) NODE_HOME=$NODE_HOME_21; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
   *) echo "Unsupported NODE_VERSION: $NODE_VERSION"; display_usage; exit 1;;
 esac
 
