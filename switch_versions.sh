@@ -5,13 +5,16 @@ display_usage() {
   echo "# Offline Node.js, npm, pnpm, and yarn Switcher #"
   echo "##############################################"
   echo "# Set environment variables:"
-  echo "# NODE_VERSION: 14 | 16 | 18 | 20 (default: 14)"
-  echo "# NPM_VERSION: Use offline .tgz only (see /opt/npm)"
-  echo "# PNPM_VERSION: Uses offline .tgz (pre-mapped)"
-  echo "# YARN_VERSION: 1.22.19 | 1.22.22 only (offline)"
+  echo "# NODE_VERSION: 14 | 16 | 18 | 20 | 21 (default: 14)"
+  echo "# NPM_VERSION: 6.14.18 | 7.24.2 | 8.19.2 | 9.8.1 | 10.5.0 | 10.9.2 | 11.3.0 (default: latest for version)"
+  echo "# PNPM_VERSION: 7.30.0 | 8.6.0 | 9.0.0 | 10.8.1 (default: latest for version)"
+  echo "# YARN_VERSION: 1.22.19 | 1.22.22 (default: 1.22.19)"
   echo "##############################################"
   echo ""
 }
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
 # Defaults
 NODE_VERSION=${NODE_VERSION:-14}
@@ -25,6 +28,7 @@ case $NODE_VERSION in
   16) NODE_HOME=$NODE_HOME_16; PNPM_TARBALL="/opt/pnpm/pnpm-8.6.0.tgz";;
   18) NODE_HOME=$NODE_HOME_18; PNPM_TARBALL="/opt/pnpm/pnpm-9.0.0.tgz";;
   20) NODE_HOME=$NODE_HOME_20; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
+  21) NODE_HOME=$NODE_HOME_21; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
   *) echo "Unsupported NODE_VERSION: $NODE_VERSION"; display_usage; exit 1;;
 esac
 
