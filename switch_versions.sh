@@ -1,70 +1,57 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-display_usage() {
-  echo "##############################################"
-  echo "# Offline Node.js, npm, pnpm, and yarn Switcher #"
-  echo "##############################################"
-  echo "# Set environment variables:"
-  echo "# NODE_VERSION: 14 | 16 | 18 | 20 | 21 (default: 14)"
-  echo "# NPM_VERSION: 6.14.18 | 7.24.2 | 8.19.2 | 9.8.1 | 10.5.0 | 10.9.2 | 11.3.0 (default: latest for version)"
-  echo "# PNPM_VERSION: 7.30.0 | 8.6.0 | 9.0.0 | 10.8.1 (default: latest for version)"
-  echo "# YARN_VERSION: 1.22.19 | 1.22.22 (default: 1.22.19)"
-  echo "##############################################"
-  echo ""
-}
+# You must define these ENV variables:
+# NODE_VERSION, NPM_VERSION, PNPM_VERSION, YARN_VERSION
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+echo "Switching versions using environment variables:"
+echo "NODE_VERSION=${NODE_VERSION}"
+echo "NPM_VERSION=${NPM_VERSION}"
+echo "PNPM_VERSION=${PNPM_VERSION}"
+echo "YARN_VERSION=${YARN_VERSION}"
 
-# Defaults
-NODE_VERSION=${NODE_VERSION:-14}
-NPM_VERSION=${NPM_VERSION:-""}
-PNPM_VERSION=${PNPM_VERSION:-""}
-YARN_VERSION=${YARN_VERSION:-"1.22.19"}
+# Clear old binaries
+rm -f /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/pnpm /usr/local/bin/yarn
 
-# Set node paths
-case $NODE_VERSION in
-  14) NODE_HOME=$NODE_HOME_14; PNPM_TARBALL="/opt/pnpm/pnpm-7.30.0.tgz";;
-  16) NODE_HOME=$NODE_HOME_16; PNPM_TARBALL="/opt/pnpm/pnpm-8.6.0.tgz";;
-  18) NODE_HOME=$NODE_HOME_18; PNPM_TARBALL="/opt/pnpm/pnpm-9.0.0.tgz";;
-  20) NODE_HOME=$NODE_HOME_20; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
-  21) NODE_HOME=$NODE_HOME_21; PNPM_TARBALL="/opt/pnpm/pnpm-10.8.1.tgz";;
-  *) echo "Unsupported NODE_VERSION: $NODE_VERSION"; display_usage; exit 1;;
-esac
-
-export PATH=$NODE_HOME/bin:$PATH
-
-# Offline npm install
-if [ -n "$NPM_VERSION" ]; then
-  NPM_TARBALL="/opt/npm/npm-${NPM_VERSION}.tgz"
-  if [ -f "$NPM_TARBALL" ]; then
-    npm install -g "$NPM_TARBALL"
-  else
-    echo "Error: NPM version tarball not found at $NPM_TARBALL"
-    exit 1
-  fi
+# Link Node.js
+if [ -n "$NODE_VERSION" ]; then
+  NODE_PATH="/opt/nodejs/node-v${NODE_VERSION}.*"
+  NODE_BIN=$(find $NODE_PATH -type f -name node)
+  NODE_DIR=$(dirname "$NODE_BIN")
+  ln -s "$NODE_DIR/node" /usr/local/bin/node
+  ln -s "$NODE_DIR/npm" /usr/local/bin/npm
+  echo "Switched Node.js to version:"
+  node --version
 fi
 
-# Offline pnpm install
-npm install -g "$PNPM_TARBALL"
+# # Switch npm (if specified)
+# if [ -n "$NPM_VERSION" ]; then
+#   cd /tmp
+#   tar -xzf /opt/npm/npm-${NPM_VERSION}.tgz
+#   ln -s /tmp/package/bin/npm-cli.js /usr/local/bin/npm
+#   echo "Switched npm to version:"
+#   npm --version
+# fi
 
-# Offline yarn install
-YARN_DIR=""
-if [ "$YARN_VERSION" == "1.22.19" ]; then
-  YARN_DIR="yarn-v1.22.19"
-elif [ "$YARN_VERSION" == "1.22.22" ]; then
-  YARN_DIR="yarn-v1.22.22"
-else
-  echo "Unsupported YARN_VERSION: $YARN_VERSION"; exit 1
+# Switch pnpm (if specified)
+if [ -n "$PNPM_VERSION" ]; then
+  cd /tmp
+  tar -xzf /opt/pnpm/pnpm-${PNPM_VERSION}.tgz
+  ln -s /tmp/package/bin/pnpm.cjs /usr/local/bin/pnpm
+  chmod +x /usr/local/bin/pnpm
+  echo "Switched pnpm to version:"
+  pnpm --version
 fi
 
-tar -xzf "/opt/yarn/${YARN_DIR}.tar.gz" -C /usr/local
-ln -sf "/usr/local/${YARN_DIR}/bin/yarn" /usr/local/bin/yarn
+# Switch Yarn (if specified)
+if [ -n "$YARN_VERSION" ]; then
+  cd /tmp
+  tar -xzf /opt/yarn/yarn-v${YARN_VERSION}.tar.gz
+  ln -s /tmp/yarn-v${YARN_VERSION}/bin/yarn /usr/local/bin/yarn
+  chmod +x /usr/local/bin/yarn
+  echo "Switched Yarn to version:"
+  yarn --version
+fi
 
-# Log versions
-echo "Node.js: $(node -v)"
-echo "npm: $(npm -v)"
-echo "pnpm: $(pnpm -v)"
-echo "yarn: $(yarn -v)"
-
+# Continue with CMD
 exec "$@"
