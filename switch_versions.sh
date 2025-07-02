@@ -8,7 +8,7 @@ display_usage() {
   echo "├───────────────────────────────────────────────────────────────────────────────────┤"
   echo "│  Set environment variables to control tool versions:                              │"
   echo "│                                                                                   │"
-  echo "│  • NODE_VERSION:  14.21.3 | 16.20.0 | 18.17.1 | 20.5.0 | 21.7.3                                          │"
+  echo "│  • NODE_VERSION:  14.21.3 | 16.20.0 | 18.17.1 | 20.5.0 | 21.7.3                   │"
   echo "│  • NPM_VERSION:   6.14.18 | 7.24.2 | 8.19.2 | 9.8.1 | 10.5.0 | 10.9.2 | 11.3.0    │"
   echo "│  • PNPM_VERSION:  7.30.0 | 8.6.0 | 9.0.0 | 10.8.1                                 │"
   echo "│  • YARN_VERSION:  1.22.19 | 1.22.22                                               │"
@@ -31,7 +31,7 @@ switch_version() {
     exit 1
   fi
 
-  if [[ -n "${NPM_VERSION}" && ! " ${VALID_NPM_VERSIONS} " =~ " ${NPM_VERSION} " ]]; then
+  if [[ -n "${NPM_VERSION}" && "${NPM_VERSION}" != "bundled" && ! " ${VALID_NPM_VERSIONS} " =~ " ${NPM_VERSION} " ]]; then
     echo "ERROR: Invalid NPM_VERSION: '${NPM_VERSION}'"
     display_usage
     exit 1
