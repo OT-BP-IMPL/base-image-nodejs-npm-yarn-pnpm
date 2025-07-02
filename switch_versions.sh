@@ -1,57 +1,81 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -e
 
-# You must define these ENV variables:
-# NODE_VERSION, NPM_VERSION, PNPM_VERSION, YARN_VERSION
+display_usage() {
+  echo ""
+  echo "┌───────────────────────────────────────────────────────────────────────────────────┐"
+  echo "│             🚀 Offline Node.js, npm, pnpm, and yarn Switcher                      │"
+  echo "├───────────────────────────────────────────────────────────────────────────────────┤"
+  echo "│  Set environment variables to control tool versions:                              │"
+  echo "│                                                                                   │"
+  echo "│  • NODE_VERSION:  14.21.3 | 16.20.0 | 18.17.1 | 20.5.0 | 21.7.3                                          │"
+  echo "│  • NPM_VERSION:   6.14.18 | 7.24.2 | 8.19.2 | 9.8.1 | 10.5.0 | 10.9.2 | 11.3.0    │"
+  echo "│  • PNPM_VERSION:  7.30.0 | 8.6.0 | 9.0.0 | 10.8.1                                 │"
+  echo "│  • YARN_VERSION:  1.22.19 | 1.22.22                                               │"
+  echo "│                                                                                   │"
+  echo "│  Leave NPM_VERSION / PNPM_VERSION / YARN_VERSION unset                            │"
+  echo "│  or empty to skip switching them.                                                 │"
+  echo "└───────────────────────────────────────────────────────────────────────────────────┘"
+  echo ""
+}
 
-echo "Switching versions using environment variables:"
-echo "NODE_VERSION=${NODE_VERSION}"
-echo "NPM_VERSION=${NPM_VERSION}"
-echo "PNPM_VERSION=${PNPM_VERSION}"
-echo "YARN_VERSION=${YARN_VERSION}"
+switch_version() {
+  VALID_NODE_VERSIONS="14.21.3 16.20.0 18.17.1 20.5.0 21.7.3"
+  VALID_NPM_VERSIONS="6.14.18 7.24.2 8.19.2 9.8.1 10.5.0 10.9.2 11.3.0"
+  VALID_PNPM_VERSIONS="7.30.0 8.6.0 9.0.0 10.8.1"
+  VALID_YARN_VERSIONS="1.22.19 1.22.22"
 
-# Clear old binaries
-rm -f /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/pnpm /usr/local/bin/yarn
+  if ! [[ " ${VALID_NODE_VERSIONS} " =~ " ${NODE_VERSION} " ]]; then
+    echo "ERROR: Invalid NODE_VERSION: '${NODE_VERSION}'"
+    display_usage
+    exit 1
+  fi
 
-# Link Node.js
-if [ -n "$NODE_VERSION" ]; then
-  NODE_PATH="/opt/nodejs/node-v${NODE_VERSION}.*"
-  NODE_BIN=$(find $NODE_PATH -type f -name node)
-  NODE_DIR=$(dirname "$NODE_BIN")
-  ln -s "$NODE_DIR/node" /usr/local/bin/node
-  ln -s "$NODE_DIR/npm" /usr/local/bin/npm
-  echo "Switched Node.js to version:"
-  node --version
-fi
+  if [[ -n "${NPM_VERSION}" && ! " ${VALID_NPM_VERSIONS} " =~ " ${NPM_VERSION} " ]]; then
+    echo "ERROR: Invalid NPM_VERSION: '${NPM_VERSION}'"
+    display_usage
+    exit 1
+  fi
 
-# # Switch npm (if specified)
-# if [ -n "$NPM_VERSION" ]; then
-#   cd /tmp
-#   tar -xzf /opt/npm/npm-${NPM_VERSION}.tgz
-#   ln -s /tmp/package/bin/npm-cli.js /usr/local/bin/npm
-#   echo "Switched npm to version:"
-#   npm --version
-# fi
+  if [[ -n "${PNPM_VERSION}" && ! " ${VALID_PNPM_VERSIONS} " =~ " ${PNPM_VERSION} " ]]; then
+    echo "ERROR: Invalid PNPM_VERSION: '${PNPM_VERSION}'"
+    display_usage
+    exit 1
+  fi
 
-# Switch pnpm (if specified)
-if [ -n "$PNPM_VERSION" ]; then
-  cd /tmp
-  tar -xzf /opt/pnpm/pnpm-${PNPM_VERSION}.tgz
-  ln -s /tmp/package/bin/pnpm.cjs /usr/local/bin/pnpm
-  chmod +x /usr/local/bin/pnpm
-  echo "Switched pnpm to version:"
-  pnpm --version
-fi
+  if [[ -n "${YARN_VERSION}" && ! " ${VALID_YARN_VERSIONS} " =~ " ${YARN_VERSION} " ]]; then
+    echo "ERROR: Invalid YARN_VERSION: '${YARN_VERSION}'"
+    display_usage
+    exit 1
+  fi
 
-# Switch Yarn (if specified)
-if [ -n "$YARN_VERSION" ]; then
-  cd /tmp
-  tar -xzf /opt/yarn/yarn-v${YARN_VERSION}.tar.gz
-  ln -s /tmp/yarn-v${YARN_VERSION}/bin/yarn /usr/local/bin/yarn
-  chmod +x /usr/local/bin/yarn
-  echo "Switched Yarn to version:"
-  yarn --version
-fi
+  NODE_VERSION="${NODE_VERSION:-20.5.0}"
+  NPM_VERSION="${NPM_VERSION:-bundled}"
 
-# Continue with CMD
-exec "$@"
+  NODE_DIR="/opt/nodejs/node-v${NODE_VERSION}-linux-x64"
+
+  if [ ! -d "$NODE_DIR" ]; then
+    echo "ERROR: Node version $NODE_VERSION not found in $NODE_DIR"
+    exit 1
+  fi
+
+  export PATH="$NODE_DIR/bin:$PATH"
+
+  if [ "$NPM_VERSION" != "bundled" ]; then
+    echo "Installing npm@$NPM_VERSION..."
+    npm install -g "npm@$NPM_VERSION"
+  fi
+
+  echo "Using Node: $(node -v)"
+  echo "Using npm:  $(npm -v)"
+
+  if [ "${AIRGAP_ENV}" = "true" ]; then
+    # NODE_VERSION="$(node -v | sed 's/^v//')"
+    export npm_config_nodedir="/root/.cache/node-gyp/${NODE_VERSION}"
+    echo "Using offline headers for Node ${NODE_VERSION}: ${npm_config_nodedir}"
+  fi
+
+  exec "$@"
+}
+
+switch_version "$@"
