@@ -1,68 +1,77 @@
-# Use an official Ubuntu as a parent image
 FROM ubuntu:20.04
 
-# Set non-interactive mode and configure timezone
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Kolkata
+ENV AIRGAP_ENV=true
 
-# Install packages, configure timezone, and clean up cache
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    apt-utils \
-    curl \
-    wget \
-    unzip \
-    tar \
-    git \
-    jq \
-    tzdata \
-    bash \
-    gettext \
-    libintl-perl \
-    python3 \
-    python3-pip \
-    gcc \
-    libffi-dev \
-    libssl-dev \
-    musl-tools \
-    python3-dev \
-    make \
-    python3-venv && \
+        curl \
+        ca-certificates \
+        xz-utils \
+        gnupg \
+        wget \
+        unzip \
+        tar \
+        git \
+        jq \
+        tzdata \
+        bash \
+        gettext \
+        python3 \
+        python3-pip \
+        build-essential \
+        libffi-dev \
+        libssl-dev \
+        python3-dev \
+        g++ \
+        python3-venv && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create and activate the Python virtual environment, then install the cryptography library
-RUN python3 -m venv /root/venv && \
-    /root/venv/bin/pip install --upgrade pip && \
-    /root/venv/bin/pip install --no-cache-dir cryptography
+RUN pip install --no-cache-dir cryptography
 
-# Install multiple versions of Node.js
-RUN mkdir -p /opt/nodejs && \
-    curl -L https://nodejs.org/dist/v14.21.3/node-v14.21.3-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
-    curl -L https://nodejs.org/dist/v16.20.0/node-v16.20.0-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
-    curl -L https://nodejs.org/dist/v18.17.1/node-v18.17.1-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
-    curl -L https://nodejs.org/dist/v20.5.0/node-v20.5.0-linux-x64.tar.gz | tar xvz -C /opt/nodejs
+RUN mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /root/.cache/node-gyp
 
-# Set environment variables for Node.js installations
-ENV NODE_VERSION ""
-ENV NODE_HOME_14=/opt/nodejs/node-v14.21.3-linux-x64
-ENV NODE_HOME_16=/opt/nodejs/node-v16.20.0-linux-x64
-ENV NODE_HOME_18=/opt/nodejs/node-v18.17.1-linux-x64
-ENV NODE_HOME_20=/opt/nodejs/node-v20.5.0-linux-x64
+WORKDIR /opt
 
-# Add Node.js binaries to PATH
-ENV PATH=$NODE_HOME_14/bin:$NODE_HOME_16/bin:$NODE_HOME_18/bin:$NODE_HOME_20/bin:$PATH
+RUN set -eux; \
+    for version in 14.21.3 16.20.0 18.17.1 20.5.0 21.7.3; do \
+        curl -fsSL -o node-v${version}.tar.xz \
+          https://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.xz; \
+        tar -xf node-v${version}.tar.xz -C /opt/nodejs; \
+        rm node-v${version}.tar.xz; \
+        curl -fsSL -o /opt/node_headers/node-v${version}-headers.tar.gz \
+          https://nodejs.org/dist/v${version}/node-v${version}-headers.tar.gz; \
+    done
 
-# Use the virtual environment's Python for the container
-ENV VENV_PATH="/root/venv/bin:$PATH"
+RUN for version in 14.21.3 16.20.0 18.17.1 20.5.0 21.7.3; do \
+    mkdir -p /root/.cache/node-gyp/${version}; \
+    tar -xzf /opt/node_headers/node-v${version}-headers.tar.gz -C /root/.cache/node-gyp/${version} --strip-components=1; \
+done
 
-# Copy the script to switch versions
+RUN set -eux; \
+    cd /opt/npm; \
+    for v in 6.14.18 7.24.2 8.19.2 9.8.1 10.5.0 10.9.2 11.3.0; do \
+        curl -fsSL -O https://registry.npmjs.org/npm/-/npm-${v}.tgz; \
+    done
+
+RUN set -eux; \
+    cd /opt/pnpm; \
+    for v in 7.30.0 8.6.0 9.0.0 10.8.1; do \
+        curl -fsSL -O https://registry.npmjs.org/pnpm/-/pnpm-${v}.tgz; \
+    done
+
+RUN set -eux; \
+    cd /opt/yarn; \
+    for v in 1.22.19 1.22.22; do \
+        curl -fsSL -O https://github.com/yarnpkg/yarn/releases/download/v${v}/yarn-v${v}.tar.gz; \
+    done
+
 COPY switch_versions.sh /usr/local/bin/switch_versions.sh
 RUN chmod +x /usr/local/bin/switch_versions.sh
 
-# Set the entry point to the version switcher script
-ENTRYPOINT ["/usr/local/bin/switch_versions.sh"]
+WORKDIR /src
 
-# Default command
-CMD ["bash"]
+ENTRYPOINT ["/usr/local/bin/switch_versions.sh"]

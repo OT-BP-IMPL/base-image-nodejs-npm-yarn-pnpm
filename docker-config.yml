@@ -1,4 +1,4 @@
 # docker-config.yml
 image:
-  name: mukulmj/custom-ubuntu-nodejs-npm
-  tag: 0.0.1-alpha
+  name: registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
+  tag: 0.0.4
