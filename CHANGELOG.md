@@ -1,5 +1,40 @@
 # Changelog For registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
 
+## [0.0.4] - 2025-07-23
+
+### Added
+
+* Added support for **Node.js 21.x**.
+* Added support for **npm 9.x**, **10.x**, and **11.x** versions.
+* Introduced `AIRGAP_ENV` environment variable:
+
+  * Defaults to `true`.
+  * Prevents runtime downloads when enabled, ensuring airgap/offline compatibility.
+* Enhanced `switch_versions.sh` script to:
+
+  * Log the selected versions of Node.js, npm, pnpm, and yarn.
+  * Validate `AIRGAP_ENV` and block unsupported downloads if active.
+
+### Fixed
+
+* Resolved compatibility issues when switching between Node.js major versions and npm.
+* Improved error handling for invalid or unsupported `NPM_VERSION` selections.
+* Ensured consistent behavior when no environment variables are provided (defaults applied cleanly).
+* Installed cryptography on global.
+* Use as primary entrypoint in your image `/usr/local/bin/switch_versions.sh` or `source /usr/local/bin/switch_versions.sh` in your entrypoint script.
+
+### Changed
+
+* Updated default behavior to:
+
+  * `AIRGAP_ENV=true` by default.
+  * `NODE_VERSION=20` if unspecified.
+  * `PNPM_VERSION=7.30.0` and `YARN_VERSION=1.22.19` if unspecified.
+* Refined error messages in `switch_versions.sh` for clarity and consistency.
+* Updated documentation to reflect new environment variables and version support.
+
+---
+
 ## [0.0.3] - 2025-07-02
 
 ### Added

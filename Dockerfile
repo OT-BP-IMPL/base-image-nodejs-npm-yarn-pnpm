@@ -30,6 +30,8 @@ RUN apt-get update && \
     echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir cryptography
+
 RUN mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /root/.cache/node-gyp
 
 WORKDIR /opt
@@ -73,4 +75,3 @@ RUN chmod +x /usr/local/bin/switch_versions.sh
 WORKDIR /src
 
 ENTRYPOINT ["/usr/local/bin/switch_versions.sh"]
-# CMD ["bash"]
