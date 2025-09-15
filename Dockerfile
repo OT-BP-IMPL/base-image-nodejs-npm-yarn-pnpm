@@ -25,20 +25,18 @@ RUN apt-get update && \
         libssl-dev \
         python3-dev \
         g++ \
+	    vim \
+        nano \
         python3-venv && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 🔸 Create non-root buildpiper user and group
-RUN addgroup --gid 1001 buildpiper && \
-    adduser --disabled-password --gecos "" --uid 1001 --gid 1001 --home /home/buildpiper buildpiper && \
-    mkdir -p /home/buildpiper && \
-    chown -R buildpiper:buildpiper /home/buildpiper
+RUN groupadd -g 65522 buildpiper && \
+    useradd -m -u 65522 -g buildpiper -s /bin/bash buildpiper && \
+    mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /home/buildpiper/.cache/node-gyp /src && \
+    chown -R buildpiper:buildpiper /opt /home/buildpiper /src
 
-
-
-# 🔸 Create node-related folders
 RUN mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /root/.cache/node-gyp && \
     chown -R buildpiper:buildpiper /opt /root/.cache/node-gyp
 
@@ -77,18 +75,14 @@ RUN set -eux; \
         curl -fsSL -O https://github.com/yarnpkg/yarn/releases/download/v${v}/yarn-v${v}.tar.gz; \
     done
 
-# 🔸 Copy version switcher and give permission
 COPY --chown=buildpiper:buildpiper switch_versions.sh /usr/local/bin/switch_versions.sh
 RUN chmod +x /usr/local/bin/switch_versions.sh
 
-# 🔸 Set working directory for user
 WORKDIR /home/buildpiper
 
-# 🔸 Change ownership of necessary folders
 RUN mkdir -p /home/buildpiper/.cache /bp/workspace && \
     chown -R buildpiper:buildpiper /home/buildpiper /bp /opt /root/.cache
 
-# 🔸 Switch to non-root user
 USER buildpiper
 
 ENTRYPOINT ["/usr/local/bin/switch_versions.sh"]
