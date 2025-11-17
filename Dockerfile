@@ -1,3 +1,9 @@
+FROM ubuntu:20.04 as test-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Kolkata
+
+# Copy the original Dockerfile content here
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -34,7 +40,7 @@ RUN apt-get update && \
         libssl-dev \
         python3-dev \
         g++ \
-	    vim \
+        vim \
         nano \
         python3-venv && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -50,7 +56,6 @@ RUN mkdir -p \
     /bp/workspace \
     /usr/local/bin \
     /var/lib/apt/lists \
-    # /etc/timezone \
     /opt/python_versions \
     /opt/jdk \
     /opt/maven \
@@ -60,16 +65,12 @@ RUN mkdir -p \
     /opt/nodejs \
     /opt/node_headers \
     /home/buildpiper/.cache/node-gyp \
+    /home/buildpiper/.nvm \
+    /home/buildpiper/.npm \
+    /home/buildpiper/.pnpm \
+    /home/buildpiper/.yarn \
     /app/venv && \
-    chown -R buildpiper:buildpiper /src /bp /opt /usr /tmp /app
-
-# RUN groupadd -g 65522 buildpiper && \
-#     useradd -m -u 65522 -g buildpiper -s /bin/bash buildpiper && \
-#     mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /home/buildpiper/.cache/node-gyp /src && \
-#     chown -R buildpiper:buildpiper /opt /home/buildpiper /src
-
-# RUN mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /home/buildpiper/.cache/node-gyp && \
-#     chown -R buildpiper:buildpiper /opt /home/buildpiper/.cache/node-gyp
+    chown -R buildpiper:buildpiper /src /bp /opt /usr /tmp /app /home/buildpiper
 
 WORKDIR /opt
 
@@ -87,6 +88,8 @@ RUN for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3; do \
     mkdir -p /home/buildpiper/.cache/node-gyp/${version}; \
     tar -xzf /opt/node_headers/node-v${version}-headers.tar.gz -C /home/buildpiper/.cache/node-gyp/${version} --strip-components=1; \
 done
+
+RUN chown -R buildpiper:buildpiper /opt/nodejs /home/buildpiper/.cache/node-gyp
 
 RUN set -eux; \
     cd /opt/npm; \
@@ -109,12 +112,6 @@ RUN set -eux; \
 COPY --chown=buildpiper:buildpiper switch_versions.sh /usr/local/bin/switch_versions.sh
 RUN chmod +x /usr/local/bin/switch_versions.sh
 
-# WORKDIR /home/buildpiper
-
-# RUN mkdir -p /home/buildpiper/.cache /bp/workspace && \
-#     chown -R buildpiper:buildpiper /home/buildpiper /bp /opt /home/buildpiper/.cache
-
 USER buildpiper
 
 ENTRYPOINT ["/usr/local/bin/switch_versions.sh"]
-# CMD ["bash"]
