@@ -47,6 +47,8 @@ RUN apt-get update && \
     echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir cryptography
+
 RUN mkdir -p \
     /src/reports \
     /bp/data \

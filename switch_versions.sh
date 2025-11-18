@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 display_usage() {
   echo ""
@@ -25,57 +25,81 @@ switch_version() {
   VALID_PNPM_VERSIONS="7.30.0 8.6.0 9.0.0 10.8.1"
   VALID_YARN_VERSIONS="1.22.19 1.22.22"
 
+  NODE_VERSION="${NODE_VERSION:-20.5.0}"
+  NPM_VERSION="${NPM_VERSION:-bundled}"
+
   if ! [[ " ${VALID_NODE_VERSIONS} " =~ " ${NODE_VERSION} " ]]; then
     echo "ERROR: Invalid NODE_VERSION: '${NODE_VERSION}'"
     display_usage
     exit 1
   fi
 
-  if [[ -n "${NPM_VERSION}" && "${NPM_VERSION}" != "bundled" && ! " ${VALID_NPM_VERSIONS} " =~ " ${NPM_VERSION} " ]]; then
+  if [[ -n "${NPM_VERSION:-}" && "${NPM_VERSION}" != "bundled" && ! " ${VALID_NPM_VERSIONS} " =~ " ${NPM_VERSION} " ]]; then
     echo "ERROR: Invalid NPM_VERSION: '${NPM_VERSION}'"
     display_usage
     exit 1
   fi
 
-  if [[ -n "${PNPM_VERSION}" && ! " ${VALID_PNPM_VERSIONS} " =~ " ${PNPM_VERSION} " ]]; then
+  if [[ -n "${PNPM_VERSION:-}" && ! " ${VALID_PNPM_VERSIONS} " =~ " ${PNPM_VERSION} " ]]; then
     echo "ERROR: Invalid PNPM_VERSION: '${PNPM_VERSION}'"
     display_usage
     exit 1
   fi
 
-  if [[ -n "${YARN_VERSION}" && ! " ${VALID_YARN_VERSIONS} " =~ " ${YARN_VERSION} " ]]; then
+  if [[ -n "${YARN_VERSION:-}" && ! " ${VALID_YARN_VERSIONS} " =~ " ${YARN_VERSION} " ]]; then
     echo "ERROR: Invalid YARN_VERSION: '${YARN_VERSION}'"
     display_usage
     exit 1
   fi
 
-  NODE_VERSION="${NODE_VERSION:-20.5.0}"
-  NPM_VERSION="${NPM_VERSION:-bundled}"
-
   NODE_DIR="/opt/nodejs/node-v${NODE_VERSION}-linux-x64"
-
-  if [ ! -d "$NODE_DIR" ]; then
-    echo "ERROR: Node version $NODE_VERSION not found in $NODE_DIR"
+  if [ ! -x "${NODE_DIR}/bin/node" ]; then
+    echo "ERROR: Node version '${NODE_VERSION}' not found in ${NODE_DIR}"
     exit 1
   fi
 
-  export PATH="$NODE_DIR/bin:$PATH"
+  # Remove previous Node paths
+  PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '^/opt/nodejs/' | paste -sd ':' -)"
+  export PATH="${NODE_DIR}/bin:${PATH}"
 
-  if [ "$NPM_VERSION" != "bundled" ]; then
-    echo "Installing npm@$NPM_VERSION..."
-    npm install -g "npm@$NPM_VERSION"
-  fi
-
-  echo "Using Node: $(node -v)"
-  echo "Using npm:  $(npm -v)"
-
-  if [ "${AIRGAP_ENV}" = "true" ]; then
-    # NODE_VERSION="$(node -v | sed 's/^v//')"
+  # Re-set npm_config_nodedir for native modules if in airgapped env
+  if [ "${AIRGAP_ENV:-}" = "true" ]; then
     export npm_config_nodedir="/home/buildpiper/.cache/node-gyp/${NODE_VERSION}"
     echo "Using offline headers for Node ${NODE_VERSION}: ${npm_config_nodedir}"
   fi
 
-  exec "$@"
+  # Optionally install npm
+  if [ "${NPM_VERSION}" != "bundled" ]; then
+    echo "Installing npm@${NPM_VERSION}..."
+    npm install -g "npm@${NPM_VERSION}"
+    echo "Using npm:  $(npm -v)"
+  fi
+
+  # Optionally install pnpm
+  if [ -n "${PNPM_VERSION:-}" ]; then
+    echo "Installing pnpm@${PNPM_VERSION}..."
+    npm install -g "pnpm@${PNPM_VERSION}"
+    echo "Using pnpm: $(pnpm -v)"
+  fi
+
+  # Optionally install yarn
+  if [ -n "${YARN_VERSION:-}" ]; then
+    echo "Installing yarn@${YARN_VERSION}..."
+    npm install -g "yarn@${YARN_VERSION}"
+    echo "Using yarn: $(yarn -v)"
+  fi
+
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🟢 Node.js   : $(node -v)"
+  echo "📦 npm       : $(npm -v)"
+  [ -n "${PNPM_VERSION:-}" ] && echo "📦 pnpm      : $(pnpm -v)"
+  [ -n "${YARN_VERSION:-}" ] && echo "🧶 yarn      : $(yarn -v)"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  if [ $# -gt 0 ]; then
+    "$@"
+  fi
 }
 
 switch_version "$@"

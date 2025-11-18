@@ -62,7 +62,7 @@ docker run -it --rm \
   -e PNPM_VERSION=9.0.0 \
   -e YARN_VERSION=1.22.22 \
   -e AIRGAP_ENV=true \
-  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.4-version-upgrade
+  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:latest
 ```
 
 ---
@@ -84,7 +84,7 @@ docker run -it --rm \
 ```bash
 docker run -it --rm \
   -e NODE_VERSION=18 \
-  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.4-version-upgrade
+  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:latest
 ```
 
 ### Use Node.js 16 with specific npm, pnpm, and Yarn versions
@@ -96,7 +96,7 @@ docker run -it --rm \
   -e PNPM_VERSION=8.6.0 \
   -e YARN_VERSION=1.22.22 \
   -e AIRGAP_ENV=true \
-  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.4-version-upgrade
+  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:latest
 ```
 
 ### Use Node.js 21 without airgap restrictions (not recommended)
@@ -107,7 +107,7 @@ docker run -it --rm \
   -e NPM_VERSION=11.3.0 \
   -e PNPM_VERSION=10.8.1 \
   -e AIRGAP_ENV=false \
-  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.4-version-upgrade
+  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:latest
 ```
 
 ---
