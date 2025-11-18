@@ -1,5 +1,13 @@
 # Changelog For registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
 
+## [0.0.5-nr] - 2025-11-15
+
+### Added
+
+* Supports functionality of `0.0.3` release.
+* Added nodejs and npm version `20.13.0` and `10.5.2` support in Dockerfile and switch_versions.sh.
+* Updated Dockerfile with non-root user creation and permission settings for better security practices.
+
 ## [0.0.3] - 2025-07-02
 
 ### Added

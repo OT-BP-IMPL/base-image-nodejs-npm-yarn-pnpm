@@ -9,7 +9,7 @@ FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Kolkata
 ENV AIRGAP_ENV=true
-
+                                            
 RUN if command -v apk >/dev/null 2>&1; then \
       addgroup -g 65522 buildpiper && \
       adduser -u 65522 -G buildpiper -D -h /home/buildpiper buildpiper; \
@@ -75,7 +75,7 @@ RUN mkdir -p \
 WORKDIR /opt
 
 RUN set -eux; \
-    for version in 14.21.3 16.20.0 18.17.1 20.5.0 21.7.3; do \
+    for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3; do \
         curl --retry 5 --retry-delay 2 --max-time 60 --connect-timeout 10 -L --fail -o node-v${version}.tar.xz \
           https://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.xz; \
         tar -xf node-v${version}.tar.xz -C /opt/nodejs; \
