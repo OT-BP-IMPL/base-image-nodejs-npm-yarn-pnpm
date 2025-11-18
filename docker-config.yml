@@ -1,4 +1,4 @@
 # docker-config.yml
 image:
   name: registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
-  tag: 0.0.4
+  tag: 0.0.5-nr

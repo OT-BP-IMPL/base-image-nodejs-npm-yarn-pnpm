@@ -1,14 +1,14 @@
 # Release Notes for `registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn` Docker Image
 
-## Version: `0.0.3`
+## Version: `0.0.5-nr`
 
-### Release Date: July 2, 2025
+### Release Date: November 15, 2025
 
 ---
 
 ### Overview
 
-This release significantly expands support for Node.js, npm, pnpm, and Yarn versions, introduces an **airgap mode** (`AIRGAP_ENV`), and further improves the runtime switching script. The image remains fully pre-downloaded, making it ideal for airgapped and secure environments.
+This release of the `registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn` Docker image builds upon the features introduced in version `0.0.3`, enhancing support for Node.js and npm versions, and non-root user creation for improved security practices within the Dockerfile.
 
 ---
 

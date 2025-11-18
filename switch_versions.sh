@@ -3,25 +3,25 @@ set -euo pipefail
 
 display_usage() {
   echo ""
-  echo "┌───────────────────────────────────────────────────────────────────────────────────┐"
-  echo "│             🚀 Offline Node.js, npm, pnpm, and yarn Switcher                      │"
-  echo "├───────────────────────────────────────────────────────────────────────────────────┤"
-  echo "│  Set environment variables to control tool versions:                              │"
-  echo "│                                                                                   │"
-  echo "│  • NODE_VERSION:  14.21.3 | 16.20.0 | 18.17.1 | 20.5.0 | 21.7.3                   │"
-  echo "│  • NPM_VERSION:   6.14.18 | 7.24.2 | 8.19.2 | 9.8.1 | 10.5.0 | 10.9.2 | 11.3.0    │"
-  echo "│  • PNPM_VERSION:  7.30.0 | 8.6.0 | 9.0.0 | 10.8.1                                 │"
-  echo "│  • YARN_VERSION:  1.22.19 | 1.22.22                                               │"
-  echo "│                                                                                   │"
-  echo "│  Leave NPM_VERSION / PNPM_VERSION / YARN_VERSION unset                            │"
-  echo "│  or empty to skip switching them.                                                 │"
-  echo "└───────────────────────────────────────────────────────────────────────────────────┘"
+  echo "┌──────────────────────────────────────────────────────────────────────────────────────────────┐"
+  echo "│                       🚀 Offline Node.js, npm, pnpm, and yarn Switcher                       │"
+  echo "├──────────────────────────────────────────────────────────────────────────────────────────────┤"
+  echo "│  Set environment variables to control tool versions:                                         │"
+  echo "│                                                                                              │"
+  echo "│  • NODE_VERSION:  14.21.3 | 16.20.0 | 18.17.1 | 20.5.0 | 20.13.0 | 21.7.3                    │"
+  echo "│  • NPM_VERSION:   6.14.18 | 7.24.2 | 8.19.2 | 9.8.1 | 10.5.0 | 10.5.2 | 10.9.2 | 11.3.0      │"
+  echo "│  • PNPM_VERSION:  7.30.0 | 8.6.0 | 9.0.0 | 10.8.1                                            │"
+  echo "│  • YARN_VERSION:  1.22.19 | 1.22.22                                                          │"
+  echo "│                                                                                              │"
+  echo "│  Leave NPM_VERSION / PNPM_VERSION / YARN_VERSION unset                                       │"
+  echo "│  or empty to skip switching them.                                                            │"
+  echo "└──────────────────────────────────────────────────────────────────────────────────────────────┘"
   echo ""
 }
 
 switch_version() {
-  VALID_NODE_VERSIONS="14.21.3 16.20.0 18.17.1 20.5.0 21.7.3"
-  VALID_NPM_VERSIONS="6.14.18 7.24.2 8.19.2 9.8.1 10.5.0 10.9.2 11.3.0"
+  VALID_NODE_VERSIONS="14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3"
+  VALID_NPM_VERSIONS="6.14.18 7.24.2 8.19.2 9.8.1 10.5.0 10.5.2 10.9.2 11.3.0"
   VALID_PNPM_VERSIONS="7.30.0 8.6.0 9.0.0 10.8.1"
   VALID_YARN_VERSIONS="1.22.19 1.22.22"
 
@@ -64,7 +64,7 @@ switch_version() {
 
   # Re-set npm_config_nodedir for native modules if in airgapped env
   if [ "${AIRGAP_ENV:-}" = "true" ]; then
-    export npm_config_nodedir="/root/.cache/node-gyp/${NODE_VERSION}"
+    export npm_config_nodedir="/home/buildpiper/.cache/node-gyp/${NODE_VERSION}"
     echo "Using offline headers for Node ${NODE_VERSION}: ${npm_config_nodedir}"
   fi
 

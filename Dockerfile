@@ -1,8 +1,23 @@
+FROM ubuntu:20.04 as test-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Kolkata
+
+# Copy the original Dockerfile content here
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Kolkata
 ENV AIRGAP_ENV=true
+                                            
+RUN if command -v apk >/dev/null 2>&1; then \
+      addgroup -g 65522 buildpiper && \
+      adduser -u 65522 -G buildpiper -D -h /home/buildpiper buildpiper; \
+    else \
+      groupadd -g 65522 buildpiper && \
+      useradd -u 65522 -g buildpiper -d /home/buildpiper -m buildpiper; \
+    fi && \
+    chown -R buildpiper:buildpiper /home/buildpiper
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -25,6 +40,8 @@ RUN apt-get update && \
         libssl-dev \
         python3-dev \
         g++ \
+        vim \
+        nano \
         python3-venv && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
@@ -32,13 +49,36 @@ RUN apt-get update && \
 
 RUN pip install --no-cache-dir cryptography
 
-RUN mkdir -p /opt/nodejs /opt/npm /opt/pnpm /opt/yarn /opt/node_headers /root/.cache/node-gyp
+RUN mkdir -p \
+    /src/reports \
+    /bp/data \
+    /bp/execution_dir \
+    /opt/buildpiper/shell-functions \
+    /opt/buildpiper/data \
+    /bp/workspace \
+    /usr/local/bin \
+    /var/lib/apt/lists \
+    /opt/python_versions \
+    /opt/jdk \
+    /opt/maven \
+    /opt/yarn \
+    /opt/pnpm \
+    /opt/npm \
+    /opt/nodejs \
+    /opt/node_headers \
+    /home/buildpiper/.cache/node-gyp \
+    /home/buildpiper/.nvm \
+    /home/buildpiper/.npm \
+    /home/buildpiper/.pnpm \
+    /home/buildpiper/.yarn \
+    /app/venv && \
+    chown -R buildpiper:buildpiper /src /bp /opt /usr /tmp /app /home/buildpiper
 
 WORKDIR /opt
 
 RUN set -eux; \
-    for version in 14.21.3 16.20.0 18.17.1 20.5.0 21.7.3; do \
-        curl -fsSL -o node-v${version}.tar.xz \
+    for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3; do \
+        curl --retry 5 --retry-delay 2 --max-time 60 --connect-timeout 10 -L --fail -o node-v${version}.tar.xz \
           https://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.xz; \
         tar -xf node-v${version}.tar.xz -C /opt/nodejs; \
         rm node-v${version}.tar.xz; \
@@ -46,10 +86,12 @@ RUN set -eux; \
           https://nodejs.org/dist/v${version}/node-v${version}-headers.tar.gz; \
     done
 
-RUN for version in 14.21.3 16.20.0 18.17.1 20.5.0 21.7.3; do \
-    mkdir -p /root/.cache/node-gyp/${version}; \
-    tar -xzf /opt/node_headers/node-v${version}-headers.tar.gz -C /root/.cache/node-gyp/${version} --strip-components=1; \
+RUN for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3; do \
+    mkdir -p /home/buildpiper/.cache/node-gyp/${version}; \
+    tar -xzf /opt/node_headers/node-v${version}-headers.tar.gz -C /home/buildpiper/.cache/node-gyp/${version} --strip-components=1; \
 done
+
+RUN chown -R buildpiper:buildpiper /opt/nodejs /home/buildpiper/.cache/node-gyp
 
 RUN set -eux; \
     cd /opt/npm; \
@@ -69,9 +111,9 @@ RUN set -eux; \
         curl -fsSL -O https://github.com/yarnpkg/yarn/releases/download/v${v}/yarn-v${v}.tar.gz; \
     done
 
-COPY switch_versions.sh /usr/local/bin/switch_versions.sh
+COPY --chown=buildpiper:buildpiper switch_versions.sh /usr/local/bin/switch_versions.sh
 RUN chmod +x /usr/local/bin/switch_versions.sh
 
-WORKDIR /src
+USER buildpiper
 
 ENTRYPOINT ["/usr/local/bin/switch_versions.sh"]
