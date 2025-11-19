@@ -1,5 +1,26 @@
 #!/bin/bash
-set -euo pipefail
+# Detect if the script is being sourced or executed
+if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+  _IS_SOURCED=1
+else
+  _IS_SOURCED=0
+fi
+
+# Only enable strict mode when executed; when sourced we should avoid changing
+# the caller's shell options unexpectedly.
+if [ "${_IS_SOURCED:-0}" -eq 0 ]; then
+  set -euo pipefail
+fi
+
+# Helper to exit or return depending on how the script is invoked
+safe_exit() {
+  local _code=${1:-0}
+  if [ "${_IS_SOURCED:-0}" -eq 1 ]; then
+    return "${_code}"
+  else
+    exit "${_code}"
+  fi
+}
 
 display_usage() {
   echo ""
@@ -30,35 +51,38 @@ switch_version() {
 
   NODE_VERSION="${NODE_VERSION:-20.5.0}"
   NPM_VERSION="${NPM_VERSION:-bundled}"
+  PNPM_VERSION="${PNPM_VERSION:-7.30.0}"
+  YARN_VERSION="${YARN_VERSION:-1.22.19}"
 
   if ! [[ " ${VALID_NODE_VERSIONS} " =~ " ${NODE_VERSION} " ]]; then
     echo "ERROR: Invalid NODE_VERSION: '${NODE_VERSION}'"
     display_usage
-    exit 1
+    safe_exit 1
   fi
 
   if [[ -n "${NPM_VERSION:-}" && "${NPM_VERSION}" != "bundled" && ! " ${VALID_NPM_VERSIONS} " =~ " ${NPM_VERSION} " ]]; then
     echo "ERROR: Invalid NPM_VERSION: '${NPM_VERSION}'"
     display_usage
-    exit 1
+    safe_exit 1
   fi
 
   if [[ -n "${PNPM_VERSION:-}" && ! " ${VALID_PNPM_VERSIONS} " =~ " ${PNPM_VERSION} " ]]; then
     echo "ERROR: Invalid PNPM_VERSION: '${PNPM_VERSION}'"
     display_usage
-    exit 1
+    safe_exit 1
   fi
 
   if [[ -n "${YARN_VERSION:-}" && ! " ${VALID_YARN_VERSIONS} " =~ " ${YARN_VERSION} " ]]; then
     echo "ERROR: Invalid YARN_VERSION: '${YARN_VERSION}'"
     display_usage
-    exit 1
+    safe_exit 1
   fi
+
 
   NODE_DIR="/opt/nodejs/node-v${NODE_VERSION}-linux-x64"
   if [ ! -x "${NODE_DIR}/bin/node" ]; then
     echo "ERROR: Node version '${NODE_VERSION}' not found in ${NODE_DIR}"
-    exit 1
+    safe_exit 1
   fi
 
   # Remove previous Node paths
@@ -97,7 +121,7 @@ switch_version() {
       fi
       
       # If offline install also fails, show error
-      echo "❌ ERROR: Failed to install $package_spec (both online and offline). Exiting."
+      echo "❌ ERROR: Failed to install $package_spec (both online and offline)."
       return 1
     fi
   }
@@ -105,21 +129,30 @@ switch_version() {
   # Optionally install npm
   if [ "${NPM_VERSION}" != "bundled" ]; then
     echo "Installing npm@${NPM_VERSION}..."
-    install_package "npm@${NPM_VERSION}" "npm" || exit 1
+    if ! install_package "npm@${NPM_VERSION}" "npm"; then
+      echo "ERROR: npm installation failed"
+      safe_exit 1
+    fi
     echo "Using npm:  $(npm -v)"
   fi
 
   # Optionally install pnpm
   if [ -n "${PNPM_VERSION:-}" ]; then
     echo "Installing pnpm@${PNPM_VERSION}..."
-    install_package "pnpm@${PNPM_VERSION}" "pnpm" || exit 1
+    if ! install_package "pnpm@${PNPM_VERSION}" "pnpm"; then
+      echo "ERROR: pnpm installation failed"
+      safe_exit 1
+    fi
     echo "Using pnpm: $(pnpm -v)"
   fi
 
   # Optionally install yarn
   if [ -n "${YARN_VERSION:-}" ]; then
     echo "Installing yarn@${YARN_VERSION}..."
-    install_package "yarn@${YARN_VERSION}" "yarn" || exit 1
+    if ! install_package "yarn@${YARN_VERSION}" "yarn"; then
+      echo "ERROR: yarn installation failed"
+      safe_exit 1
+    fi
     echo "Using yarn: $(yarn -v)"
   fi
 
@@ -131,8 +164,36 @@ switch_version() {
   [ -n "${YARN_VERSION:-}" ] && echo "🧶 yarn      : $(yarn -v)"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+  # If a command was provided, run or exec it depending on whether we were
+  # sourced. If no command was provided and the script was executed (not
+  # sourced) we want to give the user an interactive shell that inherits the
+  # configured environment so tools like `npm` are available. When the
+  # script is sourced we simply return so the caller's shell keeps the
+  # environment.
   if [ $# -gt 0 ]; then
-    "$@"
+    if [ "${_IS_SOURCED:-0}" -eq 1 ]; then
+      # When sourced, run the command in the current shell so any changes persist
+      "$@"
+    else
+      # When executed as entrypoint, replace the process so env is preserved for the child
+      exec "$@"
+    fi
+  else
+    if [ "${_IS_SOURCED:-0}" -eq 1 ]; then
+      # Sourced and no command: nothing to do (env already set in caller)
+      return 0
+    else
+      # Executed and no command: if interactive, drop into a shell that
+      # inherits the environment so users can run npm/yarn/pnpm directly.
+      if [ -t 0 ] || [ -t 1 ]; then
+        echo "Entering interactive shell with configured Node/npm environment."
+        echo "To apply the environment to your current shell, run: source /usr/local/bin/switch_versions.sh"
+        exec "${SHELL:-/bin/bash}" -i
+      else
+        # Non-interactive execution with no command: exit successfully.
+        safe_exit 0
+      fi
+    fi
   fi
 }
 
