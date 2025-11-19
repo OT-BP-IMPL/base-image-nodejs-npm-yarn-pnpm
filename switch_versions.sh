@@ -15,6 +15,9 @@ display_usage() {
   echo "│                                                                                              │"
   echo "│  Leave NPM_VERSION / PNPM_VERSION / YARN_VERSION unset                                       │"
   echo "│  or empty to skip switching them.                                                            │"
+  echo "│                                                                                              │"
+  echo "│  💡 NOTE: If network connectivity fails, the script automatically switches to offline        │"
+  echo "│     mode using pre-downloaded packages. No configuration needed!                             │"
   echo "└──────────────────────────────────────────────────────────────────────────────────────────────┘"
   echo ""
 }
@@ -68,24 +71,55 @@ switch_version() {
     echo "Using offline headers for Node ${NODE_VERSION}: ${npm_config_nodedir}"
   fi
 
+  # Function to install package with automatic airgap fallback
+  install_package() {
+    local package_spec="$1"
+    local package_name="$2"
+    
+    if npm install -g "$package_spec" 2>&1; then
+      return 0
+    else
+      local exit_code=$?
+      echo "⚠️  WARNING: Failed to install $package_spec from registry. Attempting offline installation..."
+      
+      # Enable airgap mode automatically
+      AIRGAP_ENV="true"
+      export AIRGAP_ENV
+      export npm_config_nodedir="/home/buildpiper/.cache/node-gyp/${NODE_VERSION}"
+      
+      # Try installing from pre-downloaded packages
+      if [[ "$package_name" == "npm" ]]; then
+        npm install -g "/opt/npm/npm-${NPM_VERSION}.tgz" 2>/dev/null && return 0
+      elif [[ "$package_name" == "pnpm" ]]; then
+        npm install -g "/opt/pnpm/pnpm-${PNPM_VERSION}.tgz" 2>/dev/null && return 0
+      elif [[ "$package_name" == "yarn" ]]; then
+        npm install -g "/opt/yarn/yarn-v${YARN_VERSION}.tar.gz" 2>/dev/null && return 0
+      fi
+      
+      # If offline install also fails, show error
+      echo "❌ ERROR: Failed to install $package_spec (both online and offline). Exiting."
+      return 1
+    fi
+  }
+
   # Optionally install npm
   if [ "${NPM_VERSION}" != "bundled" ]; then
     echo "Installing npm@${NPM_VERSION}..."
-    npm install -g "npm@${NPM_VERSION}"
+    install_package "npm@${NPM_VERSION}" "npm" || exit 1
     echo "Using npm:  $(npm -v)"
   fi
 
   # Optionally install pnpm
   if [ -n "${PNPM_VERSION:-}" ]; then
     echo "Installing pnpm@${PNPM_VERSION}..."
-    npm install -g "pnpm@${PNPM_VERSION}"
+    install_package "pnpm@${PNPM_VERSION}" "pnpm" || exit 1
     echo "Using pnpm: $(pnpm -v)"
   fi
 
   # Optionally install yarn
   if [ -n "${YARN_VERSION:-}" ]; then
     echo "Installing yarn@${YARN_VERSION}..."
-    npm install -g "yarn@${YARN_VERSION}"
+    install_package "yarn@${YARN_VERSION}" "yarn" || exit 1
     echo "Using yarn: $(yarn -v)"
   fi
 

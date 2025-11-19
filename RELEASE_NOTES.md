@@ -2,89 +2,160 @@
 
 ## Version: `0.0.5-nr`
 
-### Release Date: November 15, 2025
+### Release Date: November 18, 2025
 
 ---
 
 ### Overview
 
-This release of the `registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn` Docker image builds upon the features introduced in version `0.0.3`, enhancing support for Node.js and npm versions, and non-root user creation for improved security practices within the Dockerfile.
+This release of the `registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn` Docker image builds upon the features introduced in versions `0.0.3` and `0.0.4`, introducing **non-root user support**, **automatic airgap fallback**, and enhanced security practices. The image now provides a seamless experience for both online and offline environments without requiring manual configuration.
 
 ---
 
-### Features
+### Key Features
 
-* **Expanded Node.js Support**:
+#### 🔐 Security Improvements
 
-  * Added Node.js `21.x` to the list of supported versions.
+* **Non-Root User Support**:
+  * All package management and Node.js tools run as `buildpiper` user (UID 65522) instead of root.
+  * Significantly improves container security and follows Docker best practices.
+  * All `/opt` and home directory paths owned by buildpiper with proper permissions.
 
-* **npm Support**:
+* **Proper Permission Handling**:
+  * Fixed EACCES (permission denied) errors that occurred during npm global installations.
+  * Ensured `/opt/nodejs` and `/home/buildpiper/.cache/node-gyp` are owned by buildpiper.
+  * Native modules can be compiled without permission issues.
 
-  * Added support for a broader range of npm versions:
+#### 🌐 Intelligent Airgap Mode
 
-    * `6.x`
-    * `7.x`
-    * `8.x`
-    * `9.x`
-    * `10.x`
-    * `11.x`
-  * Dynamically switch npm versions via `NPM_VERSION`.
+* **Automatic Fallback to Offline Mode**:
+  * If npm install fails due to network connectivity, the script automatically switches to offline mode.
+  * Falls back to pre-downloaded packages without any user configuration needed.
+  * No need to manually set `AIRGAP_ENV=true` - the script detects and handles network failures gracefully.
+  * Users don't need to know if they're in an airgap environment - it "just works"!
 
-* **pnpm Support**:
+* **Enhanced `install_package()` Function**:
+  * Intelligently attempts online installation first.
+  * Automatically falls back to pre-downloaded packages if network fails.
+  * Provides clear feedback with warnings and errors.
+  * Works for npm, pnpm, and yarn packages.
 
-  * Pre-downloaded versions:
+#### 📦 Expanded Version Support
 
-    * `pnpm-7.30.0`
-    * `pnpm-8.6.0`
-    * `pnpm-9.0.0`
-    * `pnpm-10.8.1`
+* **Node.js Versions** (now 6 versions):
+  * 14.21.3, 16.20.0, 18.17.1, 20.5.0, **20.13.0** (NEW), 21.7.3
 
-* **yarn Support**:
+* **npm Versions** (now 8 versions):
+  * 6.14.18, 7.24.2, 8.19.2, 9.8.1, 10.5.0, **10.5.2** (NEW), 10.9.2, 11.3.0
 
-  * Pre-downloaded versions:
+* **pnpm Versions** (4 versions):
+  * 7.30.0, 8.6.0, 9.0.0, 10.8.1
 
-    * `yarn-v1.22.19`
-    * `yarn-v1.22.22`
+* **yarn Versions** (2 versions):
+  * 1.22.19, 1.22.22
 
-* **Airgap Mode**:
+#### 🎯 Default Behavior
 
-  * Added the `AIRGAP_ENV` environment variable.
-
-    * When `AIRGAP_ENV=true` (default), the container prevents any runtime downloads.
-    * Useful for secure and offline environments.
-
-* **Improved `switch_versions.sh` Script**:
-
-  * Logs the selected versions of Node.js, npm, pnpm, and yarn at startup.
-  * Validates all selected versions before switching.
-  * Supports execution of additional commands passed to the container.
-  * Provides clear error messages for unsupported versions.
-
-* **Default Behavior**:
-
-  * Defaults to:
-
-    * `NODE_VERSION=14`
-    * `NPM_VERSION` bundled with Node.js 14
-    * `PNPM_VERSION=7.30.0`
-    * `YARN_VERSION=1.22.19`
-    * `AIRGAP_ENV=true`
+* `AIRGAP_ENV=true` - Enabled by default (safer for all environments)
+* `NODE_VERSION=20.5.0` - Latest LTS by default
+* `NPM_VERSION=bundled` - Uses bundled npm with selected Node.js
+* `PNPM_VERSION` - (optional) Leave unset to skip
+* `YARN_VERSION` - (optional) Leave unset to skip
 
 ---
 
-### Fixes
+### What's Fixed in This Release
 
-* Fixed issues with version mismatch between Node.js and npm.
-* Resolved `404` errors when downloading Yarn tarballs.
-* Improved error handling for invalid version selections.
-* Corrected compatibility issues when switching pnpm versions across Node.js major versions.
+* ✅ **Permission Denied Errors**: Resolved EACCES errors during npm installations
+* ✅ **Non-Root User Issues**: Fixed directory ownership and permissions for buildpiper user
+* ✅ **Network Resilience**: Automatic fallback to offline packages on connection failure
+* ✅ **Dockerfile Cleanup**: Removed duplicate test-builder stage
+* ✅ **Version Consistency**: All npm versions in switch_versions.sh are now in Dockerfile
 
 ---
 
-### Known Issues
+### What's Changed
 
-* Specifying unsupported versions of Node.js, npm, pnpm, or yarn will cause the container to display an error and exit.
-* Currently, only **pre-downloaded versions** are allowed in airgap mode (`AIRGAP_ENV=true`).
+* **Dockerfile Updates**:
+  * Set `ENV AIRGAP_ENV=true` explicitly for better visibility
+  * Added npm version 10.5.2 to download loop
+  * Removed duplicate test-builder stage
+  * All setup runs as root; USER buildpiper only after installation
+
+* **switch_versions.sh Updates**:
+  * New `install_package()` function with automatic fallback logic
+  * Updated help message explaining automatic airgap fallback
+  * Intelligent error handling for both online and offline scenarios
+  * Better user feedback with warnings and error messages
+
+---
+
+### How to Use
+
+```bash
+# Default usage (automatic airgap fallback enabled)
+docker run -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
+
+# Specify Node.js version
+docker run -e NODE_VERSION=21.7.3 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
+
+# Install specific npm version
+docker run -e NODE_VERSION=20.5.0 -e NPM_VERSION=10.5.2 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
+
+# Install pnpm (automatic fallback on network failure)
+docker run -e NODE_VERSION=20.5.0 -e PNPM_VERSION=8.6.0 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
+
+# Install yarn and pnpm together
+docker run -e NODE_VERSION=21.7.3 -e NPM_VERSION=11.3.0 -e PNPM_VERSION=10.8.1 -e YARN_VERSION=1.22.22 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
+
+# Run custom command
+docker run -e NODE_VERSION=20.5.0 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr npm --version
+```
+
+---
+
+### Environment Variables
+
+| Variable | Default | Options | Description |
+|----------|---------|---------|-------------|
+| `NODE_VERSION` | `20.5.0` | 14.21.3, 16.20.0, 18.17.1, 20.5.0, 20.13.0, 21.7.3 | Node.js version to use |
+| `NPM_VERSION` | `bundled` | 6.14.18, 7.24.2, 8.19.2, 9.8.1, 10.5.0, 10.5.2, 10.9.2, 11.3.0, bundled | npm version to install globally |
+| `PNPM_VERSION` | (unset) | 7.30.0, 8.6.0, 9.0.0, 10.8.1 | pnpm version to install (optional) |
+| `YARN_VERSION` | (unset) | 1.22.19, 1.22.22 | yarn version to install (optional) |
+| `AIRGAP_ENV` | `true` | true, false | Set to true for offline environments (automatic fallback on failure) |
+
+---
+
+### Known Issues & Limitations
+
+* Only pre-downloaded versions are allowed. Specifying unsupported versions will cause an error.
+* When network fails, automatic fallback only works for pre-downloaded packages.
+
+---
+
+### Planned Enhancements
+
+* Add support for more npm/pnpm/yarn versions.
+* Further reduce image size by optimizing layer caching.
+* Include automated validation tests during image build.
+* Add health checks for pre-downloaded packages.
+
+---
+
+### Migration from Previous Versions
+
+Users coming from `0.0.4` or earlier versions will benefit from:
+
+1. **No manual AIRGAP_ENV configuration needed** - automatic detection
+2. **Better security** - non-root user by default
+3. **No permission errors** - properly configured directories
+4. **More npm versions** - 10.5.2 and other versions now supported
+
+---
+
+### Support & Feedback
+
+For issues, questions, or feature requests, please contact the BuildPiper team.
 
 ---
 

@@ -4,9 +4,31 @@
 
 ### Added
 
-* Supports functionality of `0.0.3` and `0.0.4` release.
-* Added nodejs and npm version `20.13.0` and `10.5.2` support in Dockerfile and switch_versions.sh.
-* Updated Dockerfile with non-root user creation and permission settings for better security practices.
+* Supports functionality of `0.0.3` and `0.0.4` releases.
+* Added Node.js version `20.13.0` support in Dockerfile and switch_versions.sh.
+* Added npm version `10.5.2` support in Dockerfile and switch_versions.sh.
+* Updated Dockerfile with non-root user (`buildpiper` with UID 65522) creation for improved security practices.
+* Implemented automatic airgap fallback mechanism in `switch_versions.sh`:
+  * If npm install fails due to network connectivity, automatically switches to offline mode.
+  * Falls back to pre-downloaded packages without requiring manual AIRGAP_ENV configuration.
+  * Users no longer need to know or care whether they're in an airgap environment.
+
+### Fixed
+
+* Resolved EACCES permission denied errors by:
+  * Ensuring all `/opt/nodejs` directories are owned by the buildpiper user.
+  * Properly setting ownership on `/home/buildpiper/.cache/node-gyp` for native module compilation.
+  * All setup commands now run as root, with `USER buildpiper` only set after all installations.
+* Fixed npm global package installation issues by ensuring proper directory ownership and permissions.
+* Removed duplicate test-builder stage from Dockerfile.
+* Added missing npm version 10.5.2 to the download loop.
+
+### Changed
+
+* Set `ENV AIRGAP_ENV=true` as default in Dockerfile for better visibility and safety.
+* Enhanced `switch_versions.sh` with intelligent `install_package()` function for automatic fallback behavior.
+* Updated help message to inform users about automatic offline mode fallback.
+* Ensured consistency between Dockerfile npm versions and switch_versions.sh supported versions.
 
 ## [0.0.4] - 2025-07-23
 
