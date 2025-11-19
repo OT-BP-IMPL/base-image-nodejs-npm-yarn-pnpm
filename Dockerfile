@@ -1,9 +1,3 @@
-FROM ubuntu:20.04 as test-builder
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Kolkata
-
-# Copy the original Dockerfile content here
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -95,7 +89,7 @@ RUN chown -R buildpiper:buildpiper /opt/nodejs /home/buildpiper/.cache/node-gyp
 
 RUN set -eux; \
     cd /opt/npm; \
-    for v in 6.14.18 7.24.2 8.19.2 9.8.1 10.5.0 10.9.2 11.3.0; do \
+    for v in 6.14.18 7.24.2 8.19.2 9.8.1 10.5.0 10.5.2 10.9.2 11.3.0; do \
         curl -fsSL -O https://registry.npmjs.org/npm/-/npm-${v}.tgz; \
     done
 
