@@ -66,157 +66,68 @@ This release of the `registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn` Doc
 
 ### What's Fixed in This Release
 
-* ✅ **Permission Denied Errors**: Resolved EACCES errors during npm installations
-* ✅ **Non-Root User Issues**: Fixed directory ownership and permissions for buildpiper user
-* ✅ **Network Resilience**: Automatic fallback to offline packages on connection failure
-* ✅ **Dockerfile Cleanup**: Removed duplicate test-builder stage
-* ✅ **Version Consistency**: All npm versions in switch_versions.sh are now in Dockerfile
+# Release Notes for `registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn`
 
----
+## Version: `0.0.5-nr`
 
-### What's Changed
+### Release Date: November 18, 2025
 
-* **Dockerfile Updates**:
-  * Set `ENV AIRGAP_ENV=true` explicitly for better visibility
-  * Added npm version 10.5.2 to download loop
-  * Removed duplicate test-builder stage
-  * All setup runs as root; USER buildpiper only after installation
+### Overview
 
-* **switch_versions.sh Updates**:
-  * New `install_package()` function with automatic fallback logic
-  * Updated help message explaining automatic airgap fallback
-  * Intelligent error handling for both online and offline scenarios
-  * Better user feedback with warnings and error messages
+This release introduces non-root user support, automatic airgap fallback, and improved permission handling to make the image safer and more resilient in both online and offline environments.
 
----
+### Key Features
 
-### How to Use
+* Security: non-root `buildpiper` user (UID 65522) with proper ownership of `/opt` and home directories.
+* Automatic airgap fallback: if online npm installs fail, the script enables offline mode and uses pre-downloaded packages.
+* Expanded version support: Node.js `20.13.0` and npm `10.5.2` added.
+
+### Fixes
+
+* Resolved EACCES permission errors by fixing ownership and chown sequencing in the Dockerfile.
+* Fixed npm global install issues and removed a duplicate `test-builder` stage.
+
+### Changes
+
+* `ENV AIRGAP_ENV=true` is set by default in the Dockerfile for safer offline behavior.
+* `switch_versions.sh` includes `install_package()` to try online installs then fall back to local packages.
+
+### How to use (examples)
+
+Run interactive shell with defaults (auto-airgap enabled):
 
 ```bash
-# Default usage (automatic airgap fallback enabled)
 docker run -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
-
-# Specify Node.js version
-docker run -e NODE_VERSION=21.7.3 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
-
-# Install specific npm version
-docker run -e NODE_VERSION=20.5.0 -e NPM_VERSION=10.5.2 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
-
-# Install pnpm (automatic fallback on network failure)
-docker run -e NODE_VERSION=20.5.0 -e PNPM_VERSION=8.6.0 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
-
-# Install yarn and pnpm together
-docker run -e NODE_VERSION=21.7.3 -e NPM_VERSION=11.3.0 -e PNPM_VERSION=10.8.1 -e YARN_VERSION=1.22.22 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr
-
-# Run custom command
-docker run -e NODE_VERSION=20.5.0 -it registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr npm --version
 ```
 
----
-
-### Environment Variables
-
-| Variable | Default | Options | Description |
-|----------|---------|---------|-------------|
-| `NODE_VERSION` | `20.5.0` | 14.21.3, 16.20.0, 18.17.1, 20.5.0, 20.13.0, 21.7.3 | Node.js version to use |
-| `NPM_VERSION` | `bundled` | 6.14.18, 7.24.2, 8.19.2, 9.8.1, 10.5.0, 10.5.2, 10.9.2, 11.3.0, bundled | npm version to install globally |
-| `PNPM_VERSION` | (unset) | 7.30.0, 8.6.0, 9.0.0, 10.8.1 | pnpm version to install (optional) |
-| `YARN_VERSION` | (unset) | 1.22.19, 1.22.22 | yarn version to install (optional) |
-| `AIRGAP_ENV` | `true` | true, false | Set to true for offline environments (automatic fallback on failure) |
-
----
-
-### Known Issues & Limitations
-
-* Only pre-downloaded versions are allowed. Specifying unsupported versions will cause an error.
-* When network fails, automatic fallback only works for pre-downloaded packages.
-
----
-
-### Planned Enhancements
-
-* Add support for more npm/pnpm/yarn versions.
-* Further reduce image size by optimizing layer caching.
-* Include automated validation tests during image build.
-* Add health checks for pre-downloaded packages.
-
----
-
-### Migration from Previous Versions
-
-Users coming from `0.0.4` or earlier versions will benefit from:
-
-1. **No manual AIRGAP_ENV configuration needed** - automatic detection
-2. **Better security** - non-root user by default
-3. **No permission errors** - properly configured directories
-4. **More npm versions** - 10.5.2 and other versions now supported
-
----
-
-### Support & Feedback
-
-For issues, questions, or feature requests, please contact the BuildPiper team.
-
----
-
-### Planned Enhancements
-
-* Add support for more npm/pnpm/yarn versions.
-* Further reduce image size by cleaning up build artifacts.
-* Include automated validation tests during image build.
-
----
-
-### How to Use
-
-#### 1. Build the Image
+Run a single command with chosen versions:
 
 ```bash
-docker build -t registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.3 .
+docker run --rm -e NODE_VERSION=20.13.0 -e NPM_VERSION=10.5.2 \
+  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.5-nr \
+  npm --version
 ```
 
-#### 2. Run the Container
-
-Specify the desired versions via environment variables:
+To apply the environment to your current shell (recommended in interactive sessions):
 
 ```bash
-docker run -it --rm \
-  -e NODE_VERSION=20 \
-  -e NPM_VERSION=10.9.2 \
-  -e PNPM_VERSION=9.0.0 \
-  -e YARN_VERSION=1.22.22 \
-  -e AIRGAP_ENV=true \
-  registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn:0.0.3
+source /usr/local/bin/switch_versions.sh
+node -v
+npm -v
 ```
 
-#### 3. Default Behavior
+### Environment variables
 
-If you omit environment variables, defaults will be applied:
+* `NODE_VERSION` (default `20.5.0`) — options: 14.21.3, 16.20.0, 18.17.1, 20.5.0, 20.13.0, 21.7.3
+* `NPM_VERSION` (default `bundled`) — options: 6.14.18, 7.24.2, 8.19.2, 9.8.1, 10.5.0, 10.5.2, 10.9.2, 11.3.0, bundled
+* `PNPM_VERSION` (optional) — options: 7.30.0, 8.6.0, 9.0.0, 10.8.1
+* `YARN_VERSION` (optional) — options: 1.22.19, 1.22.22
+* `AIRGAP_ENV` (default `true`) — set to `false` to allow runtime downloads
 
-* Node.js 14
-* Default npm bundled with Node.js 14
-* pnpm 7.30.0
-* Yarn 1.22.19
-* Airgap mode enabled (`AIRGAP_ENV=true`)
+### Known limitations
 
----
+* Offline fallback only works for versions that were pre-downloaded into the image.
 
-### Changelog
+### Migration notes
 
-* **Added**:
-
-  * Node.js 21.x support.
-  * Airgap mode (`AIRGAP_ENV`).
-  * npm 9.x, 10.x, and 11.x support.
-  * Pre-downloaded `pnpm` and `yarn` versions.
-  * Enhanced logging of active versions at runtime.
-
-* **Fixed**:
-
-  * Yarn tarball download issues.
-  * Version compatibility across tools.
-  * Error messaging and validation in `switch_versions.sh`.
-
----
-
-✅ **Tip**: Always verify your version selections match the supported matrix before running the container.
+Users upgrading from 0.0.4 will benefit from automatic airgap detection and improved security (non-root user).
