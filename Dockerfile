@@ -44,7 +44,9 @@ RUN mkdir -p /opt/nodejs && \
     curl -L https://nodejs.org/dist/v16.20.0/node-v16.20.0-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
     curl -L https://nodejs.org/dist/v18.17.1/node-v18.17.1-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
     curl -L https://nodejs.org/dist/v20.5.0/node-v20.5.0-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
-    curl -L https://nodejs.org/dist/v21.7.3/node-v21.7.3-linux-x64.tar.gz | tar xvz -C /opt/nodejs
+    curl -L https://nodejs.org/dist/v21.7.3/node-v21.7.3-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
+    curl -L https://nodejs.org/dist/v22.8.0/node-v22.8.0-linux-x64.tar.gz | tar xvz -C /opt/nodejs && \
+    curl -L https://nodejs.org/dist/v24.7.0/node-v24.7.0-linux-x64.tar.gz | tar xvz -C /opt/nodejs
 
 # Set environment variables for Node.js installations
 ENV NODE_HOME_14=/opt/nodejs/node-v14.21.3-linux-x64
@@ -52,9 +54,11 @@ ENV NODE_HOME_16=/opt/nodejs/node-v16.20.0-linux-x64
 ENV NODE_HOME_18=/opt/nodejs/node-v18.17.1-linux-x64
 ENV NODE_HOME_20=/opt/nodejs/node-v20.5.0-linux-x64
 ENV NODE_HOME_21=/opt/nodejs/node-v21.7.3-linux-x64
+ENV NODE_HOME_22=/opt/nodejs/node-v22.8.0-linux-x64
+ENV NODE_HOME_24=/opt/nodejs/node-v24.7.0-linux-x64
 
 # Add Node.js binaries to PATH
-ENV PATH=$NODE_HOME_14/bin:$NODE_HOME_16/bin:$NODE_HOME_18/bin:$NODE_HOME_20/bin:$NODE_HOME_21/bin$PATH
+ENV PATH=$NODE_HOME_14/bin:$NODE_HOME_16/bin:$NODE_HOME_18/bin:$NODE_HOME_20/bin:$NODE_HOME_21/bin:$NODE_HOME_22/bin:$NODE_HOME_24/bin:$PATH
 
 # Install nvm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash && \
@@ -72,8 +76,8 @@ RUN mkdir -p /opt/npm && \
     curl -fsSL https://registry.npmjs.org/npm/-/npm-6.14.17.tgz -o /opt/npm/npm-6.14.17.tgz && \
     curl -fsSL https://registry.npmjs.org/npm/-/npm-8.19.2.tgz -o /opt/npm/npm-8.19.2.tgz && \
     curl -fsSL https://registry.npmjs.org/npm/-/npm-9.8.1.tgz -o /opt/npm/npm-9.8.1.tgz && \
-    curl -fsSL https://registry.npmjs.org/npm/-/npm-10.9.2.tgz -o /opt/npm/npm-10.9.2.tgz \
-    curl -fsSL https://registry.npmjs.org/npm/-/npm-11.3.0.tgz -o /opt/npm/npm-11.3.0.tgz
+    curl -fsSL https://registry.npmjs.org/npm/-/npm-10.9.2.tgz -o /opt/npm/npm-10.9.2.tgz && \
+    curl -fsSL https://registry.npmjs.org/npm/-/npm-11.3.0.tgz -o /opt/npm/npm-11.3.0.tgz 
 
 # Pre-download specific pnpm versions
 RUN mkdir -p /opt/pnpm && \
