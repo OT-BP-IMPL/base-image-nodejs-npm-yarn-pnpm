@@ -71,7 +71,7 @@ RUN mkdir -p \
 WORKDIR /opt
 
 RUN set -eux; \
-    for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3; do \
+    for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3 22.8.0 24.7.0; do \
         curl --retry 5 --retry-delay 2 --max-time 60 --connect-timeout 10 -L --fail -o node-v${version}.tar.xz \
           https://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.xz; \
         tar -xf node-v${version}.tar.xz -C /opt/nodejs; \
@@ -80,7 +80,7 @@ RUN set -eux; \
           https://nodejs.org/dist/v${version}/node-v${version}-headers.tar.gz; \
     done
 
-RUN for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3; do \
+RUN for version in 14.21.3 16.20.0 18.17.1 20.5.0 20.13.0 21.7.3 22.8.0 24.7.0; do \
     mkdir -p /home/buildpiper/.cache/node-gyp/${version}; \
     tar -xzf /opt/node_headers/node-v${version}-headers.tar.gz -C /home/buildpiper/.cache/node-gyp/${version} --strip-components=1; \
 done

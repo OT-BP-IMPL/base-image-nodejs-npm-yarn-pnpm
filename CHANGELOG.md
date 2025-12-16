@@ -1,5 +1,16 @@
 # Changelog For registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
 
+
+## [0.0.6-nr] - 2025-12-16
+
+### Added
+
+* Updated VALID_NODE_VERSIONS to include support for newer Node.js releases:
+* Added Node.js 22.8.0
+* Added Node.js 24.7.0
+* Ensured switch_versions.sh validates and allows switching to the newly supported Node.js versions.
+
+
 ## [0.0.5-nr] - 2025-11-18
 
 ### Added
