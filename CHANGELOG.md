@@ -1,5 +1,27 @@
 # Changelog For registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
 
+## [0.0.6-nr] - 2025-10-24
+
+### Added
+
+* Support for Node.js `25.1.0` and npm `10.5.2` in the Dockerfile and `switch_versions.sh`.
+* Non-root user `buildpiper` (UID 65522) with proper ownership of `/opt` and home directories.
+* Automatic airgap fallback in `switch_versions.sh` — on network failure the script sets `AIRGAP_ENV=true` and installs from pre-downloaded packages.
+
+### Fixed
+
+* Resolved EACCES permission errors by ensuring proper ownership of `/opt/nodejs` and `/home/buildpiper/.cache/node-gyp`.
+* Ensured all setup/install steps run as root; switched to `USER buildpiper` only after installation and chown operations.
+* Removed duplicate `test-builder` stage and added missing npm `10.5.2` to the download loop.
+
+### Changed
+
+* Set `ENV AIRGAP_ENV=true` in the Dockerfile by default (safer for offline/airgapped environments).
+* Added an `install_package()` helper in `switch_versions.sh` that attempts online installs and falls back to local packages.
+* Improved documentation and help output to explain automatic offline fallback and usage patterns.
+
+---
+
 ## [0.0.5-nr] - 2025-11-18
 
 ### Added
