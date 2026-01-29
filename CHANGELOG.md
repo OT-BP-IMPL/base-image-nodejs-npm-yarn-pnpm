@@ -1,6 +1,6 @@
 # Changelog For registry.buildpiper.in/base-image/nodejs-npm-pnpm-yarn
 
-## [0.0.6-nr] - 2025-10-24
+## [0.0.7-nr] - 2025-10-24
 
 ### Added
 
